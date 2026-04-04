@@ -39,44 +39,39 @@ int main(int argc, char* argv[]) {
     }
 	
 	// Run the loop
+	const double radius = 5.0; // pixels
+	int dx, dy;
 	while (true) {
+		static double angle = 3.14159265 / 4.0;
+		dx = static_cast<int>(radius * cos(angle));
+		dy = static_cast<int>(radius * sin(angle));
+		INPUT input = { 0 };
+		input.type = INPUT_MOUSE;
+		input.mi.dx = dx;
+		input.mi.dy = dy;
+		input.mi.dwFlags = MOUSEEVENTF_MOVE;
+		SendInput(1, &input, sizeof(INPUT));
 		if (!MOVEMOUSE) {
-			// Just send a mouse move of 0,0 to keep the system awake
-			const int DELTA = 2;
+			// Just send a mouse move of net 0,0 to keep the system awake
 			if (DEBUG) {
 				std::cout << "Sending mouse heartbeat" << std::endl;
 			}
-			INPUT input = {0};
-			input.type = INPUT_MOUSE;
-			input.mi.dx = DELTA;
-			input.mi.dy = DELTA;
-			input.mi.dwFlags = MOUSEEVENTF_MOVE;
-			SendInput(1, &input, sizeof(INPUT));
 			std::this_thread::sleep_for(std::chrono::milliseconds(2)); // Wait 2 milliseconds
-			input.mi.dx = -DELTA;
-			input.mi.dy = -DELTA;
+			input.mi.dx = -dx;
+			input.mi.dy = -dy;
 			SendInput(1, &input, sizeof(INPUT));
 			std::this_thread::sleep_for(std::chrono::seconds(2)); // Wait 2 seconds
+			angle += 3.14159265/2.0; // Increment angle for next move - move to a new quadrant
 		} else {
 			// Move the mouse in a small circle
-			static double angle = 0.0;
-			const double radius = 5.0; // pixels
-			int dx = static_cast<int>(radius * cos(angle));
-			int dy = static_cast<int>(radius * sin(angle));
 			if (DEBUG) {
 				std::cout << "Moving mouse by (" << dx << "," << dy << ")" << std::endl;
 			}
-			INPUT input = {0};
-			input.type = INPUT_MOUSE;
-			input.mi.dx = dx;
-			input.mi.dy = dy;
-			input.mi.dwFlags = MOUSEEVENTF_MOVE;
-			SendInput(1, &input, sizeof(INPUT));
-			angle += 0.5; // Increment angle for next move
-			if (angle >= 2 * 3.14159265) {
-				angle -= 2 * 3.14159265; // Keep angle within 0 to 2π
-			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Wait 100 milliseconds
+			angle += 0.5; // Increment angle for next move
+		}
+		if (angle >= 2 * 3.14159265) {
+			angle -= 2 * 3.14159265; // Keep angle within 0 to 2π
 		}
 	}
 
